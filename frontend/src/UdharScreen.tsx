@@ -12,8 +12,7 @@ import {
 } from 'lucide-react';
 import { Screen, Customer, UdharTransaction } from './types';
 import { AddCustomerModal } from './AddCustomerModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import { API_BASE_URL } from './constants';
 
 export function UdharScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
   const [customers, setCustomers] = useState<Customer[]>([]);

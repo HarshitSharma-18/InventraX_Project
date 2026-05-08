@@ -54,8 +54,7 @@ import {
 } from 'recharts';
 import { Screen, Product, Transaction } from './types';
 import { UdharScreen } from './UdharScreen';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import { API_BASE_URL } from './constants';
 
 
 function Layout({ children, currentScreen, setScreen, onAddNew, profile }: {
