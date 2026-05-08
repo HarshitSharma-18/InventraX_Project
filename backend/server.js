@@ -9,13 +9,12 @@ const billsRoutes = require('./src/routes/bills');
 const revenueRoutes = require('./src/routes/revenue');
 const authRoutes = require('./src/routes/auth');
 const profileRoutes = require('./src/routes/profile');
+const udharRoutes = require('./src/routes/udhar');
 
 const supabaseMiddleware = require('./src/middleware/supabase');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-
-app.use(supabaseMiddleware);
 
 // Middleware
 app.use(cors());
@@ -25,6 +24,8 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+app.use(supabaseMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -33,6 +34,7 @@ app.use('/api/bills', billsRoutes);
 app.use('/api/revenue', revenueRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/udhar', udharRoutes);
 
 // Image Upload Endpoint
 app.post('/api/upload', async (req, res) => {
@@ -90,3 +92,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Backend Server running seamlessly on http://localhost:${PORT}`);
 });
+

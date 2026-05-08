@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   BarChart3,
@@ -35,7 +35,8 @@ import {
   Mail,
   Phone,
   Shield,
-  MapPin
+  MapPin,
+  BookOpen
 } from 'lucide-react';
 import {
   LineChart,
@@ -52,6 +53,7 @@ import {
   Cell
 } from 'recharts';
 import { Screen, Product, Transaction } from './types';
+import { UdharScreen } from './UdharScreen';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -64,10 +66,11 @@ function Layout({ children, currentScreen, setScreen, onAddNew, profile }: {
   profile?: any
 }) {
   return (
-    <div className="flex flex-col min-h-screen max-w-full overflow-x-hidden pb-32">
+    <div className="flex flex-col min-h-screen max-w-full overflow-x-hidden pb-40">
+
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-outline-variant/10 px-6 py-4 flex items-center justify-between h-16">
         <div className="flex items-center gap-3">
-          <h1 className="font-headline font-black text-2xl tracking-tight text-primary">RVIinventra</h1>
+          <h1 className="font-headline font-black text-2xl tracking-tight text-primary">InventraX</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -100,7 +103,7 @@ function Layout({ children, currentScreen, setScreen, onAddNew, profile }: {
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel rounded-t-[2rem] editorial-shadow px-10 pb-6 pt-3 flex justify-between items-end max-w-2xl mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel rounded-t-[2rem] editorial-shadow px-6 pb-6 pt-3 flex justify-between items-end max-w-2xl mx-auto">
         <button
           onClick={() => setScreen('Dashboard')}
           className={`flex flex-col items-center gap-1 transition-colors ${currentScreen === 'Dashboard' ? 'text-primary' : 'text-on-surface-variant/60'}`}
@@ -128,6 +131,16 @@ function Layout({ children, currentScreen, setScreen, onAddNew, profile }: {
             <Package size={24} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-wider">Inventory</span>
+        </button>
+
+        <button
+          onClick={() => setScreen('Udhar')}
+          className={`flex flex-col items-center gap-1 transition-colors ${currentScreen === 'Udhar' ? 'text-primary' : 'text-on-surface-variant/60'}`}
+        >
+          <div className={`p-2 rounded-2xl transition-all ${currentScreen === 'Udhar' ? 'bg-primary-container text-on-primary-container' : 'bg-transparent'}`}>
+            <CreditCard size={24} />
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider">Udhar</span>
         </button>
       </nav>
     </div>
@@ -410,18 +423,31 @@ function HistoryScreen({ setScreen, transactions, onTransactionClick }: { setScr
             className="bg-surface-container-lowest p-5 rounded-3xl editorial-shadow flex items-center justify-between group active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-2xl ${tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
-                <Package size={20} />
+              <div className={`p-3 rounded-2xl transition-colors ${
+                tx.method === 'UDHAR' 
+                  ? 'bg-secondary/10 text-secondary' 
+                  : tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+              }`}>
+                {tx.method === 'UDHAR' ? <BookOpen size={20} /> : <Package size={20} />}
               </div>
               <div>
                 <p className="font-bold text-sm tracking-tight">{tx.customerName || 'Walk-in Customer'}</p>
-                <p className="text-[10px] text-on-surface-variant/60 uppercase font-black">{tx.time} • {tx.method} • {tx.date}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] text-on-surface-variant/60 uppercase font-black">{tx.time} • {tx.method} • {tx.date}</p>
+                  {tx.method === 'UDHAR' && (
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-secondary animate-pulse" />
+                  )}
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-headline font-black">₹{tx.amount.toLocaleString()}</p>
-              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
-                {tx.status}
+              <p className={`font-headline font-black ${tx.method === 'UDHAR' ? 'text-secondary' : ''}`}>₹{tx.amount.toLocaleString()}</p>
+              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
+                tx.method === 'UDHAR' 
+                  ? 'bg-secondary text-white' 
+                  : tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+              }`}>
+                {tx.method === 'UDHAR' ? 'DUE' : tx.status}
               </span>
             </div>
           </motion.div>
@@ -452,7 +478,7 @@ function TransactionDetailScreen({ transaction, setScreen }: { transaction: Tran
         </head>
         <body>
           <div class="header">
-            <h2>RVIINVENTRA</h2>
+            <h2>INVENTRAX</h2>
             <p>Receipt #${transaction.id.slice(0, 8).toUpperCase()}</p>
             <p>${transaction.date} • ${transaction.time}</p>
           </div>
@@ -798,7 +824,7 @@ function DashboardScreen({ setScreen, transactions, products, onTransactionClick
           <button
             onClick={() => {
               exportToCSV('All');
-              const name = `RVIinventra_Export_${new Date().toISOString().split('T')[0]}.csv`;
+              const name = `InventraX_Export_${new Date().toISOString().split('T')[0]}.csv`;
               setSelectedSheet(name);
               localStorage.setItem('inventrax_excel_sheet', name);
               setAutoSync(true);
@@ -862,16 +888,21 @@ function DashboardScreen({ setScreen, transactions, products, onTransactionClick
               className="flex items-center justify-between bg-surface-container-lowest p-4 rounded-3xl editorial-shadow cursor-pointer active:scale-95 transition-transform"
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-surface-container-high rounded-2xl">
-                  <Receipt size={20} className="text-on-surface-variant" />
+                <div className={`p-3 rounded-2xl transition-colors ${tx.method === 'UDHAR' ? 'bg-secondary/10 text-secondary' : 'bg-surface-container-high text-on-surface-variant'}`}>
+                  {tx.method === 'UDHAR' ? <BookOpen size={20} /> : <Receipt size={20} />}
                 </div>
                 <div>
-                  <p className="font-bold text-sm">{tx.customerName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-sm">{tx.customerName}</p>
+                    {tx.method === 'UDHAR' && (
+                      <span className="text-[8px] font-black bg-secondary/10 text-secondary px-1.5 py-0.5 rounded uppercase">DUE</span>
+                    )}
+                  </div>
                   <p className="text-xs text-on-surface-variant">{tx.time} • {tx.method} • {tx.date}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-headline font-extrabold text-sm">₹{tx.amount.toLocaleString()}</p>
+                <p className={`font-headline font-extrabold text-sm ${tx.method === 'UDHAR' ? 'text-secondary' : ''}`}>₹{tx.amount.toLocaleString()}</p>
                 <p className="text-[10px] text-on-surface-variant font-black uppercase opacity-40">{tx.itemsCount} Items</p>
               </div>
             </div>
@@ -892,9 +923,67 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSelectors, setActiveSelectors] = useState<Set<string>>(new Set());
-  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card'>('UPI');
+  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card' | 'UDHAR'>('UPI');
   const [customerName, setCustomerName] = useState('');
   const [customerContact, setCustomerContact] = useState('');
+  const [udharCustomers, setUdharCustomers] = useState<any[]>([]);
+  const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([]);
+  const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
+
+
+
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const token = localStorage.getItem('inventrax_token');
+        const res = await fetch(`${API_BASE_URL}/api/udhar/customers`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) setUdharCustomers(await res.json());
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchCustomers();
+  }, []);
+
+  useEffect(() => {
+    const query = customerName.length >= 2 ? customerName : (customerContact.length >= 3 ? customerContact : '');
+    
+    if (!query || paymentMode !== 'UDHAR') {
+      setCustomerSearchResults([]);
+      setShowCustomerSuggestions(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearchingCustomer(true);
+      try {
+        const token = localStorage.getItem('inventrax_token');
+        const res = await fetch(`${API_BASE_URL}/api/udhar/customers/search?q=${encodeURIComponent(query)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCustomerSearchResults(data);
+          setShowCustomerSuggestions(data.length > 0);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearchingCustomer(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerName, customerContact, paymentMode]);
+
 
   const handleConfirm = () => {
     const totalAmount = Object.entries(cart).reduce((sum: number, [id, qty]: [string, number]) => {
@@ -918,14 +1007,17 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
       id: Math.floor(1000 + Math.random() * 9000).toString(),
       customerName: customerName || 'Walk-in Customer',
       customerContact: customerContact,
+      customerId: selectedCustomer?.id,
       date: now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
       amount: totalAmount,
       method: paymentMode,
       itemsCount: itemsCount,
       status: 'Completed',
-      items: transactionItems
-    };
+      items: transactionItems,
+      // Pass Phase 4 fields if it's a new customer
+      ...(!selectedCustomer && { address: customerAddress, notes: customerNotes })
+    } as any;
 
     onConfirm(newTx);
     setScreen('Dashboard');
@@ -1129,21 +1221,140 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
         <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
           <section className="bg-surface-container-lowest p-6 rounded-[2rem] editorial-shadow space-y-6">
             <div className="flex items-center gap-3">
-              <User size={20} className="text-primary" />
-              <h3 className="font-headline font-bold text-lg">Customer Details</h3>
+              {paymentMode === 'UDHAR' ? (
+                <BookOpen size={20} className="text-secondary" />
+              ) : (
+                <User size={20} className="text-primary" />
+              )}
+              <h3 className="font-headline font-bold text-lg">
+                {paymentMode === 'UDHAR' ? 'Customer for Udhar' : 'Customer Details'}
+              </h3>
             </div>
 
-            <div className="space-y-4">
-              <div>
+            <div className="space-y-4 relative">
+              <div className="relative">
                 <label className="text-[10px] font-black uppercase text-on-surface-variant/50 tracking-widest mb-1 ml-1 block">Full Name</label>
                 <input
                   type="text"
                   placeholder="Enter customer name"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
+                  onChange={(e) => {
+                    setCustomerName(e.target.value);
+                    if (paymentMode === 'UDHAR') setShowCustomerSuggestions(true);
+                  }}
+                  onFocus={() => {
+                    if (paymentMode === 'UDHAR' && customerName.length >= 2) setShowCustomerSuggestions(true);
+                  }}
                   className="w-full bg-surface-container-high rounded-t-sm rounded-b-xl py-4 px-5 border-none focus:ring-0 font-bold placeholder:text-on-surface-variant/30"
                 />
+                
+                {/* Customer Suggestions Dropdown */}
+                <AnimatePresence>
+                  {showCustomerSuggestions && customerSearchResults.length > 0 && paymentMode === 'UDHAR' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-[60] left-0 right-0 top-full mt-2 bg-surface-container-highest rounded-2xl editorial-shadow overflow-hidden border border-primary/10"
+                    >
+                      {customerSearchResults.map((customer) => (
+                        <button
+                          key={customer.id}
+                          onClick={() => {
+                            setCustomerName(customer.full_name);
+                            setCustomerContact(customer.mobile_number);
+                            setSelectedCustomer(customer);
+                            setShowCustomerSuggestions(false);
+                          }}
+                          className="w-full text-left p-4 hover:bg-primary/5 border-b border-on-surface/5 last:border-none transition-colors flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="font-bold text-sm">{customer.full_name}</p>
+                            <p className="text-[10px] text-on-surface-variant font-black">+91 {customer.mobile_number}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-black text-primary uppercase">Due: ₹{customer.total_due || 0}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+
+              {/* Selected Customer Card (Phase 2) */}
+              <AnimatePresence>
+                {selectedCustomer && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-surface-container-low rounded-2xl p-4 border border-on-surface/5 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${selectedCustomer.trust_score >= 80 ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
+                              {selectedCustomer.trust_score >= 80 ? 'High Trust' : 'Medium Risk'}
+                            </span>
+                            <span className="text-[8px] font-black bg-on-surface/5 text-on-surface-variant/60 px-2 py-0.5 rounded-full uppercase">
+                              Score: {selectedCustomer.trust_score}/100
+                            </span>
+                          </div>
+                          <p className="font-bold text-sm">Ledger Insights</p>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedCustomer(null)}
+                          className="text-[10px] font-black text-secondary uppercase underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-surface-container-highest/50 p-3 rounded-xl">
+                          <p className="text-[8px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">Current Due</p>
+                          <p className={`text-lg font-headline font-black ${selectedCustomer.total_due > 0 ? 'text-secondary' : 'text-primary'}`}>₹{selectedCustomer.total_due.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-surface-container-highest/50 p-3 rounded-xl">
+                          <p className="text-[8px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">Last Payment</p>
+                          <p className="text-lg font-headline font-black text-on-surface">
+                            {selectedCustomer.last_payment_amount > 0 ? `₹${selectedCustomer.last_payment_amount}` : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-[8px] font-black text-on-surface-variant/40 uppercase tracking-widest mb-1">Recent Activity</p>
+                        <div className="space-y-1">
+                          {selectedCustomer.recent_transactions?.map((tx: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center text-[10px] bg-white/40 p-2 rounded-lg">
+                              <span className="font-bold text-on-surface-variant">{new Date(tx.created_at).toLocaleDateString()}</span>
+                              <span className={`font-black ${tx.type === 'CREDIT' ? 'text-secondary' : 'text-primary'}`}>
+                                {tx.type === 'CREDIT' ? '+' : '-'} ₹{tx.amount}
+                              </span>
+                            </div>
+                          ))}
+                          {(!selectedCustomer.recent_transactions || selectedCustomer.recent_transactions.length === 0) && (
+                            <p className="text-[10px] text-on-surface-variant/40 italic text-center py-2">No transaction history</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedCustomer.total_due > 5000 && (
+                        <div className="bg-secondary/10 border border-secondary/20 p-3 rounded-xl flex items-center gap-3">
+                          <AlertTriangle size={16} className="text-secondary shrink-0" />
+                          <p className="text-[10px] font-bold text-secondary leading-tight">
+                            High pending balance alert! Customer owes ₹{selectedCustomer.total_due.toLocaleString()}.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
 
               <div>
                 <label className="text-[10px] font-black uppercase text-on-surface-variant/50 tracking-widest mb-1 ml-1 block">Contact Number</label>
@@ -1151,14 +1362,73 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                   <div className="bg-surface-container-high rounded-tl-xl rounded-bl-sm py-4 px-4 font-bold border-r border-on-surface/5">+91</div>
                   <input
                     type="tel"
-                    placeholder="00000 00000"
+                    placeholder="0000000000"
+                    maxLength={10}
                     value={customerContact}
-                    onChange={(e) => setCustomerContact(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setCustomerContact(val);
+                      if (paymentMode === 'UDHAR') setShowCustomerSuggestions(true);
+                      if (val.length === 10) {
+                        const existing = udharCustomers.find(c => c.mobile_number === val);
+                        if (existing && !customerName) setCustomerName(existing.full_name);
+                      }
+                    }}
                     className="flex-grow bg-surface-container-high rounded-tr-sm rounded-br-xl py-4 px-5 border-none focus:ring-0 font-bold placeholder:text-on-surface-variant/30 text-on-surface"
                   />
                 </div>
+                {udharCustomers.find(c => c.mobile_number === customerContact) && (
+                  <p className="text-[10px] font-bold text-primary mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Existing customer found</p>
+                )}
+                {isSearchingCustomer && (
+                  <p className="text-[10px] font-bold text-on-surface-variant mt-1 animate-pulse">Searching customers...</p>
+                )}
               </div>
+
+              {/* New Customer Optional Details (Phase 4) */}
+              {!selectedCustomer && paymentMode === 'UDHAR' && customerContact.length === 10 && (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest px-4 py-2 bg-primary/5 rounded-full hover:bg-primary/10 transition-colors"
+                  >
+                    {showNewCustomerForm ? '-' : '+'} Add Address & Notes (Optional)
+                  </button>
+
+                  <AnimatePresence>
+                    {showNewCustomerForm && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-4 overflow-hidden pt-2"
+                      >
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase text-on-surface-variant/50 tracking-widest ml-1 block">Address</label>
+                          <textarea
+                            value={customerAddress}
+                            onChange={(e) => setCustomerAddress(e.target.value)}
+                            placeholder="Customer's permanent address"
+                            className="w-full bg-surface-container-high rounded-xl py-4 px-5 border-none focus:ring-0 font-bold placeholder:text-on-surface-variant/30 text-sm resize-none h-24"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase text-on-surface-variant/50 tracking-widest ml-1 block">Notes / Risk Info</label>
+                          <input
+                            type="text"
+                            value={customerNotes}
+                            onChange={(e) => setCustomerNotes(e.target.value)}
+                            placeholder="e.g. Known via neighbor, trustworthy"
+                            className="w-full bg-surface-container-high rounded-xl py-4 px-5 border-none focus:ring-0 font-bold placeholder:text-on-surface-variant/30 text-sm"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
+
           </section>
 
           <section className="bg-surface-container-lowest p-6 rounded-[2rem] editorial-shadow relative overflow-hidden">
@@ -1171,18 +1441,19 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
 
               <div className="space-y-3">
                 <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Payment Mode</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   {[
                     { mode: 'Cash', icon: <Banknote size={20} /> },
                     { mode: 'UPI', icon: <QrCode size={20} /> },
-                    { mode: 'Card', icon: <CreditCard size={20} /> }
+                    { mode: 'Card', icon: <CreditCard size={20} /> },
+                    { mode: 'UDHAR', icon: <BookOpen size={20} /> }
                   ].map((item) => {
                     const isActive = paymentMode === item.mode;
                     return (
                       <button
                         key={item.mode}
                         onClick={() => setPaymentMode(item.mode as any)}
-                        className={`flex flex-col items-center gap-1 py-4 rounded-2xl border-2 transition-all ${isActive ? 'border-primary bg-primary text-white ambient-glow scale-[1.05]' : 'border-transparent bg-surface-container-high text-on-surface-variant/60 hover:bg-surface-container-highest'}`}
+                        className={`flex flex-col items-center gap-1 py-4 rounded-2xl border-2 transition-all ${isActive ? (item.mode === 'UDHAR' ? 'border-secondary bg-secondary text-white ambient-glow scale-[1.05]' : 'border-primary bg-primary text-white ambient-glow scale-[1.05]') : 'border-transparent bg-surface-container-high text-on-surface-variant/60 hover:bg-surface-container-highest'}`}
                       >
                         {item.icon}
                         <span className="text-[10px] font-bold uppercase">{item.mode}</span>
@@ -1192,13 +1463,92 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                 </div>
               </div>
 
-              <button
-                onClick={handleConfirm}
-                className="w-full py-5 bg-primary text-white rounded-full font-headline font-bold text-lg flex items-center justify-center gap-2 ambient-glow active:scale-95 transition-transform"
-              >
-                Confirm Transaction
-                <CheckCircle2 size={24} />
-              </button>
+              {paymentMode === 'UDHAR' && (
+                <div className="bg-secondary/10 p-5 rounded-[2rem] border border-secondary/20 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12">
+                    <BookOpen size={80} />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-secondary relative z-10">
+                    <div className="p-1.5 bg-secondary/10 rounded-lg">
+                      <BookOpen size={18} />
+                    </div>
+                    <p className="font-headline font-black text-sm uppercase tracking-wider">Udhar Ledger Preview</p>
+                  </div>
+                  
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest">Previous Due</span>
+                      <span className="font-headline font-black text-on-surface">₹{selectedCustomer?.total_due.toLocaleString() || '0.00'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest">New Bill Amount</span>
+                      <span className="font-headline font-black text-secondary">+ ₹{total.toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-secondary/20 mt-2">
+                      <div className="flex justify-between items-center bg-secondary text-white p-4 rounded-2xl shadow-lg shadow-secondary/20">
+                        <div>
+                          <p className="text-[8px] font-black uppercase tracking-widest opacity-70">Total Due After Purchase</p>
+                          <p className="text-2xl font-headline font-black tracking-tight">
+                            ₹{( (selectedCustomer?.total_due || 0) + total ).toLocaleString()}
+                          </p>
+                        </div>
+                        <TrendingUp size={24} className="opacity-50" />
+                      </div>
+                    </div>
+
+                    {selectedCustomer && selectedCustomer.total_due > 10000 && (
+                      <div className="mt-4 bg-white/50 backdrop-blur-sm p-3 rounded-xl border border-secondary/10 flex items-start gap-3">
+                        <Shield size={16} className="text-secondary mt-0.5" />
+                        <p className="text-[9px] font-bold text-on-surface-variant leading-relaxed">
+                          <span className="text-secondary">Risk Warning:</span> This customer's credit limit is high. Consider requesting a partial payment before extending more credit.
+                        </p>
+                      </div>
+                    )}
+
+                    {!selectedCustomer && customerContact.length === 10 && customerName && (
+                      <div className="mt-2 bg-primary/5 p-3 rounded-xl border border-primary/10 flex items-center gap-2">
+                        <CheckCircle2 size={14} className="text-primary" />
+                        <span className="text-[10px] font-bold text-primary">New customer ledger will be initialized.</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+
+              {/* Sticky Action Button for Step 2 (Phase 5) */}
+              <div className="fixed bottom-24 left-4 right-4 z-40 bg-white/80 backdrop-blur-xl p-2 rounded-[2.5rem] editorial-shadow-high border border-white/40">
+                <button
+                  onClick={handleConfirm}
+                  disabled={isSearchingCustomer || (paymentMode === 'UDHAR' && customerContact.length !== 10)}
+                  className={`w-full py-5 rounded-[2.2rem] font-headline font-black text-xl flex items-center justify-center gap-3 shadow-2xl transition-all active:scale-[0.98] ${
+                    isSearchingCustomer || (paymentMode === 'UDHAR' && customerContact.length !== 10)
+                      ? 'bg-on-surface/5 text-on-surface-variant/20 cursor-not-allowed'
+                      : (paymentMode === 'UDHAR' ? 'bg-secondary text-white ambient-glow' : 'bg-primary text-white ambient-glow')
+                  }`}
+                >
+                  {isSearchingCustomer ? (
+                    <span className="animate-pulse">Processing...</span>
+                  ) : (
+                    <>
+                      {paymentMode === 'UDHAR' ? <BookOpen size={24} /> : <CheckCircle2 size={24} />}
+                      {paymentMode === 'UDHAR' ? (selectedCustomer ? 'Add to Ledger' : 'Create & Save Udhar') : 'Confirm Transaction'}
+                    </>
+                  )}
+                </button>
+                {paymentMode === 'UDHAR' && customerContact.length !== 10 && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[10px] text-secondary font-black text-center mt-2 tracking-widest uppercase"
+                  >
+                    Enter 10-digit mobile to enable Udhar
+                  </motion.p>
+                )}
+              </div>
             </div>
           </section>
         </div>
@@ -1623,7 +1973,7 @@ function AuthScreen({ onLogin }: { onLogin: (user: any, session: any) => void })
           )}
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-on-surface-variant tracking-widest ml-2">Email Address</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="hello@rviinventra.com" className="w-full bg-surface-container-low border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-primary/20 transition-all font-bold text-on-surface" />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="hello@inventrax.com" className="w-full bg-surface-container-low border-none rounded-2xl py-4 px-5 focus:ring-2 focus:ring-primary/20 transition-all font-bold text-on-surface" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-on-surface-variant tracking-widest ml-2">Password</label>
@@ -1700,7 +2050,6 @@ function ProfileScreen({ setScreen, profile, setProfile }: { setScreen: (s: Scre
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': profile.id,
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatedProfile)
@@ -1824,7 +2173,7 @@ function ProfileScreen({ setScreen, profile, setProfile }: { setScreen: (s: Scre
           </button>
         )}
       </div>
-      <p className="text-center text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em]">RVIinventra Secured • v1.2.0</p>
+      <p className="text-center text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em]">InventraX Secured • v1.2.0</p>
     </div>
   );
 }
@@ -1871,7 +2220,6 @@ export default function App() {
       try {
         const token = localStorage.getItem('inventrax_token');
         const headers = {
-          'x-user-id': userId,
           'Authorization': `Bearer ${token}`
         };
         const [invRes, billsRes, profileRes] = await Promise.all([
@@ -1945,11 +2293,14 @@ export default function App() {
 
   const addProduct = async (newProduct: Product) => {
     try {
-      const userId = localStorage.getItem('inventrax_user_id');
+      const token = localStorage.getItem('inventrax_token');
       const payloadId = newProduct.id.startsWith('prod-') ? undefined : newProduct.id;
       const res = await fetch(`${API_BASE_URL}/api/inventory`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': userId! },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           id: payloadId,
           name: newProduct.name,
@@ -2014,8 +2365,10 @@ export default function App() {
 
   const addTransaction = async (newTx: Transaction) => {
     try {
-      const userId = localStorage.getItem('inventrax_user_id');
-      const payload = {
+      const token = localStorage.getItem('inventrax_token');
+      
+      let url = `${API_BASE_URL}/api/bills`;
+      let payload: any = {
         customerName: newTx.customerName,
         customerPhone: newTx.customerContact,
         totalAmount: newTx.amount,
@@ -2027,9 +2380,39 @@ export default function App() {
         }))
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/bills`, {
+      // Use atomic udhar endpoint for Udhar payments
+      if (newTx.method === 'UDHAR') {
+        if (newTx.customerId) {
+          url = `${API_BASE_URL}/api/udhar/ledger/add-udhar`;
+          payload = {
+            customerId: newTx.customerId,
+            customerName: newTx.customerName,
+            customerPhone: newTx.customerContact,
+            amount: newTx.amount,
+            items: newTx.items,
+            remarks: `Bill Purchase`
+          };
+        } else {
+          // New Customer Flow (Phase 4)
+          url = `${API_BASE_URL}/api/udhar/customers/create-with-udhar`;
+          payload = {
+            full_name: newTx.customerName,
+            mobile_number: newTx.customerContact,
+            address: (newTx as any).address,
+            notes: (newTx as any).notes,
+            amount: newTx.amount,
+            items: newTx.items,
+            remarks: `Initial Udhar Purchase`
+          };
+        }
+      }
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': userId! },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -2071,10 +2454,12 @@ export default function App() {
 
   const deleteProduct = async (id: string) => {
     try {
-      const userId = localStorage.getItem('inventrax_user_id');
+      const token = localStorage.getItem('inventrax_token');
       await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': userId! }
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
       });
       localStorage.removeItem(`inventrax_img_${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
@@ -2085,12 +2470,15 @@ export default function App() {
   };
   const toggleAvailability = async (id: string) => {
     try {
-      const userId = localStorage.getItem('inventrax_user_id');
+      const token = localStorage.getItem('inventrax_token');
       const product = products.find(p => p.id === id);
       if (!product) return;
       await fetch(`${API_BASE_URL}/api/inventory`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': userId! },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           id: product.id,
           name: product.name,
@@ -2150,6 +2538,7 @@ export default function App() {
           {currentScreen === 'AddItem' && <AddItemScreen setScreen={setScreen} onAdd={addProduct} productToEdit={editingProduct} />}
           {currentScreen === 'History' && <HistoryScreen setScreen={setScreen} transactions={transactions} onTransactionClick={handleTransactionClick} />}
           {currentScreen === 'Profile' && <ProfileScreen setScreen={setScreen} profile={profile} setProfile={setProfile} />}
+          {currentScreen === 'Udhar' && <UdharScreen setScreen={setScreen} />}
           {currentScreen === 'TransactionDetail' && selectedTransaction && (
             <TransactionDetailScreen transaction={selectedTransaction} setScreen={setScreen} />
           )}

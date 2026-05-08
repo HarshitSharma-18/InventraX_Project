@@ -20,14 +20,34 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    const newUser = data.user;
+
+    // 2. Create the profile record in the database
+    // We use the same supabase client from config/db (service role/anon) 
+    // because the user might not have a session yet if email confirmation is on.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: newUser.id,
+        name: name,
+        email: email,
+        updated_at: new Date()
+      });
+
+    if (profileError) {
+      console.error("Error creating profile record:", profileError);
+      // We don't necessarily want to fail signup if profile creation fails, 
+      // but we should log it. Or we could fail it. Let's be safe.
+    }
+
     // Usually with email confirmation enabled, session is null.
     return res.status(201).json({ 
       success: true, 
-      session: data.session, // Include the token
+      session: data.session, 
       user: { 
-        id: data.user.id, 
-        name: data.user.user_metadata?.name || name, 
-        email: data.user.email 
+        id: newUser.id, 
+        name: newUser.user_metadata?.name || name, 
+        email: newUser.email 
       } 
     });
   } catch (err) {

@@ -1,8 +1,8 @@
 exports.getProfile = async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(400).json({ error: 'User ID header is required' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const { data, error } = await req.supabase
@@ -27,11 +27,11 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
     const updatedProfile = req.body;
-
+    
     if (!userId) {
-      return res.status(400).json({ error: 'User ID header is required' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const payload = {

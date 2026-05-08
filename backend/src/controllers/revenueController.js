@@ -1,4 +1,4 @@
-const { supabase } = require('../config/db');
+// Removed global supabase import in favor of req.supabase for verified user isolation
 
 exports.getLast7DaysRevenue = async (req, res) => {
   try {
@@ -19,7 +19,9 @@ exports.getLast7DaysRevenue = async (req, res) => {
     }
 
     // 2. Fetch the transactions for the last 7 days from the DB
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0,0,0,0);
@@ -27,7 +29,7 @@ exports.getLast7DaysRevenue = async (req, res) => {
     // We fetch raw data and map it, though in a pure DB flow you would use the 
     // SQL aggregation function provided. This ensures logic doesn't crash if the 
     // RPC is not defined in the live Supabase project yet.
-    const { data: txs, error } = await supabase
+    const { data: txs, error } = await req.supabase
       .from('transactions')
       .select('created_at, total_amount')
       .eq('user_id', userId)

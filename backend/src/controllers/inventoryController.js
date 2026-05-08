@@ -2,7 +2,9 @@
 
 exports.getInventory = async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const { data, error } = await req.supabase
       .from('items')
       .select('*')
@@ -30,7 +32,8 @@ exports.getInventory = async (req, res) => {
 exports.addOrUpdateItem = async (req, res) => {
   try {
     const item = req.body;
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const payload = {
        name: item.name,
@@ -59,7 +62,8 @@ exports.addOrUpdateItem = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { error } = await req.supabase.from('items').delete().eq('id', id).eq('user_id', userId);
     

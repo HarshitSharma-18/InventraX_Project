@@ -1,10 +1,12 @@
-const { supabase } = require('../config/db');
+// Removed global supabase import in favor of req.supabase for verified user isolation
 // Removed ownership module in favor of database user_id column
 
 exports.getBills = async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'];
-    const { data: txs, error } = await supabase
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data: txs, error } = await req.supabase
       .from('transactions')
       .select('*, transaction_items(quantity, price, items(id, name, category))')
       .eq('user_id', userId)
@@ -39,7 +41,46 @@ exports.getBills = async (req, res) => {
 exports.saveBill = async (req, res) => {
   try {
     const billData = req.body;
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    let finalCustomerId = billData.customerId;
+
+    // Handle UDHAR Customer creation/linking
+    if (billData.paymentMode === 'UDHAR') {
+       if (!billData.customerPhone || billData.customerPhone.trim().length < 10) {
+           return res.status(400).json({ error: 'Valid 10-digit mobile number required for Udhar' });
+       }
+       if (!billData.customerName || billData.customerName.trim().length === 0) {
+           return res.status(400).json({ error: 'Customer name is required for Udhar' });
+       }
+
+       // Try to find customer by mobile
+       const { data: existingCustomer } = await req.supabase
+          .from('customers')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('mobile_number', billData.customerPhone.trim())
+          .is('deleted_at', null)
+          .single();
+
+       if (existingCustomer) {
+           finalCustomerId = existingCustomer.id;
+       } else {
+           // Create new customer
+           const { data: newCustomer, error: createCustErr } = await req.supabase
+              .from('customers')
+              .insert({
+                  full_name: billData.customerName.trim(),
+                  mobile_number: billData.customerPhone.trim(),
+                  user_id: userId
+              })
+              .select('id')
+              .single();
+           if (createCustErr) throw createCustErr;
+           finalCustomerId = newCustomer.id;
+       }
+    }
     
     // 1. Insert transaction
     const { data: txData, error: txError } = await req.supabase
@@ -70,7 +111,21 @@ exports.saveBill = async (req, res) => {
 
     // 3. Atomically Deduct stock bounds using our isolated RPC function call
     for (const item of billData.items) {
-       await supabase.rpc('deduct_stock', { p_item_id: item.inventoryId, p_quantity: item.quantity });
+       await req.supabase.rpc('deduct_stock', { p_item_id: item.inventoryId, p_quantity: item.quantity });
+    }
+
+    // 4. Create Udhar Transaction if needed
+    if (billData.paymentMode === 'UDHAR' && finalCustomerId) {
+       const { error: udharErr } = await req.supabase
+         .from('udhar_transactions')
+         .insert({
+             customer_id: finalCustomerId,
+             user_id: userId,
+             type: 'CREDIT',
+             amount: billData.totalAmount,
+             remarks: `Bill #${transactionId.substring(0,8)}`
+         });
+       if (udharErr) console.error("Failed to insert Udhar transaction:", udharErr);
     }
 
     return res.status(200).json({ success: true, transactionId });

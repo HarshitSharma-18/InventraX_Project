@@ -20,10 +20,12 @@ export interface Transaction {
   id: string;
   customerName: string;
   customerContact?: string;
+  customerId?: string;
+
   date: string;
   time: string;
   amount: number;
-  method: 'UPI' | 'Cash' | 'Card';
+  method: 'UPI' | 'Cash' | 'Card' | 'UDHAR';
   itemsCount: number;
   status: 'Completed' | 'Refunded';
   items: {
@@ -34,4 +36,26 @@ export interface Transaction {
   }[];
 }
 
-export type Screen = 'Dashboard' | 'NewBill' | 'Inventory' | 'AddItem' | 'History' | 'Analyzer' | 'TransactionDetail' | 'Profile';
+export type Screen = 'Dashboard' | 'NewBill' | 'Inventory' | 'AddItem' | 'History' | 'Analyzer' | 'TransactionDetail' | 'Profile' | 'Udhar';
+
+export interface Customer {
+  id: string;
+  full_name: string;
+  mobile_number: string;
+  alternate_number?: string;
+  address?: string;
+  notes?: string;
+  total_due: number;
+  total_paid: number;
+  trust_score: number;
+  last_transaction_date?: string;
+}
+
+export interface UdharTransaction {
+  id: string;
+  customer_id: string;
+  type: 'CREDIT' | 'PAYMENT';
+  amount: number;
+  remarks: string;
+  created_at: string;
+}
