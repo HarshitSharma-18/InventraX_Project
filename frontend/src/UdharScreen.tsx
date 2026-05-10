@@ -80,21 +80,29 @@ export function UdharScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
 
   const handleDeleteCustomer = async () => {
     if (!selectedCustomer) return;
-    if (!confirm('Are you sure you want to delete this customer? This will also delete their ledger.')) return;
+    
+    const confirmDelete = window.confirm('Are you sure you want to delete this customer? This will also delete their ledger.');
+    if (!confirmDelete) return;
+
     try {
       const token = localStorage.getItem('inventrax_token');
       const res = await fetch(`${API_BASE_URL}/api/udhar/customers/${selectedCustomer.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
       if (res.ok) {
         setCustomers(customers.filter(c => c.id !== selectedCustomer.id));
         setSelectedCustomer(null);
         setView('list');
         fetchSummaryAndCustomers(); // Refresh summary
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to delete customer: ${errorData.error || 'Unknown error'}`);
       }
     } catch (e) {
       console.error('Failed to delete customer:', e);
+      alert('A network error occurred while trying to delete the customer.');
     }
   };
 

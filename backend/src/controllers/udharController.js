@@ -150,18 +150,32 @@ exports.updateCustomer = async (req, res) => {
 };
 
 exports.deleteCustomer = async (req, res) => {
+  console.log(`DELETE request received for customer ID: ${req.params.id} by user: ${req.user?.id}`);
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     
     const { id } = req.params;
-    const { error } = await req.supabase
+    
+    // Attempt the update. If RLS is on, Supabase will handle the user_id check via the policy.
+    // However, we still add an explicit filter for safety.
+    const query = req.supabase
       .from('customers')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
+
+    if (userId) {
+      query.or(`user_id.eq.${userId},user_id.is.null`);
+    }
+
+    const { data, error, count } = await query.select();
 
     if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Customer not found or already deleted' });
+    }
+
     return res.status(200).json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });

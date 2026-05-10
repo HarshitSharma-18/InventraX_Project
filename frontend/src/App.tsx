@@ -270,8 +270,8 @@ function AnalyzerScreen({ setScreen, transactions, products }: { setScreen: (s: 
               key={range}
               onClick={() => setTimeRange(range)}
               className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range
-                  ? 'bg-primary text-white ambient-glow scale-[1.05]'
-                  : 'bg-surface-container-high text-on-surface-variant/60 hover:bg-surface-container-highest'
+                ? 'bg-primary text-white ambient-glow scale-[1.05]'
+                : 'bg-surface-container-high text-on-surface-variant/60 hover:bg-surface-container-highest'
                 }`}
             >
               {range}
@@ -422,11 +422,10 @@ function HistoryScreen({ setScreen, transactions, onTransactionClick }: { setScr
             className="bg-surface-container-lowest p-5 rounded-3xl editorial-shadow flex items-center justify-between group active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-2xl transition-colors ${
-                tx.method === 'UDHAR' 
-                  ? 'bg-secondary/10 text-secondary' 
+              <div className={`p-3 rounded-2xl transition-colors ${tx.method === 'UDHAR'
+                  ? 'bg-secondary/10 text-secondary'
                   : tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
-              }`}>
+                }`}>
                 {tx.method === 'UDHAR' ? <BookOpen size={20} /> : <Package size={20} />}
               </div>
               <div>
@@ -441,11 +440,10 @@ function HistoryScreen({ setScreen, transactions, onTransactionClick }: { setScr
             </div>
             <div className="text-right">
               <p className={`font-headline font-black ${tx.method === 'UDHAR' ? 'text-secondary' : ''}`}>₹{tx.amount.toLocaleString()}</p>
-              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
-                tx.method === 'UDHAR' 
-                  ? 'bg-secondary text-white' 
+              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${tx.method === 'UDHAR'
+                  ? 'bg-secondary text-white'
                   : tx.status === 'Completed' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
-              }`}>
+                }`}>
                 {tx.method === 'UDHAR' ? 'DUE' : tx.status}
               </span>
             </div>
@@ -954,7 +952,7 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
 
   useEffect(() => {
     const query = customerName.length >= 2 ? customerName : (customerContact.length >= 3 ? customerContact : '');
-    
+
     if (!query || paymentMode !== 'UDHAR') {
       setCustomerSearchResults([]);
       setShowCustomerSuggestions(false);
@@ -1246,7 +1244,7 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                   }}
                   className="w-full bg-surface-container-high rounded-t-sm rounded-b-xl py-4 px-5 border-none focus:ring-0 font-bold placeholder:text-on-surface-variant/30"
                 />
-                
+
                 {/* Customer Suggestions Dropdown */}
                 <AnimatePresence>
                   {showCustomerSuggestions && customerSearchResults.length > 0 && paymentMode === 'UDHAR' && (
@@ -1303,7 +1301,7 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                           </div>
                           <p className="font-bold text-sm">Ledger Insights</p>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setSelectedCustomer(null)}
                           className="text-[10px] font-black text-secondary uppercase underline"
                         >
@@ -1467,31 +1465,31 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                   <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12">
                     <BookOpen size={80} />
                   </div>
-                  
+
                   <div className="flex items-center gap-2 text-secondary relative z-10">
                     <div className="p-1.5 bg-secondary/10 rounded-lg">
                       <BookOpen size={18} />
                     </div>
                     <p className="font-headline font-black text-sm uppercase tracking-wider">Udhar Ledger Preview</p>
                   </div>
-                  
+
                   <div className="space-y-3 relative z-10">
                     <div className="flex justify-between items-center px-1">
                       <span className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest">Previous Due</span>
                       <span className="font-headline font-black text-on-surface">₹{selectedCustomer?.total_due.toLocaleString() || '0.00'}</span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center px-1">
                       <span className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest">New Bill Amount</span>
                       <span className="font-headline font-black text-secondary">+ ₹{total.toLocaleString()}</span>
                     </div>
-                    
+
                     <div className="pt-4 border-t border-secondary/20 mt-2">
                       <div className="flex justify-between items-center bg-secondary text-white p-4 rounded-2xl shadow-lg shadow-secondary/20">
                         <div>
                           <p className="text-[8px] font-black uppercase tracking-widest opacity-70">Total Due After Purchase</p>
                           <p className="text-2xl font-headline font-black tracking-tight">
-                            ₹{( (selectedCustomer?.total_due || 0) + total ).toLocaleString()}
+                            ₹{((selectedCustomer?.total_due || 0) + total).toLocaleString()}
                           </p>
                         </div>
                         <TrendingUp size={24} className="opacity-50" />
@@ -1523,11 +1521,10 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                 <button
                   onClick={handleConfirm}
                   disabled={isSearchingCustomer || (paymentMode === 'UDHAR' && customerContact.length !== 10)}
-                  className={`w-full py-5 rounded-[2.2rem] font-headline font-black text-xl flex items-center justify-center gap-3 shadow-2xl transition-all active:scale-[0.98] ${
-                    isSearchingCustomer || (paymentMode === 'UDHAR' && customerContact.length !== 10)
+                  className={`w-full py-5 rounded-[2.2rem] font-headline font-black text-xl flex items-center justify-center gap-3 shadow-2xl transition-all active:scale-[0.98] ${isSearchingCustomer || (paymentMode === 'UDHAR' && customerContact.length !== 10)
                       ? 'bg-on-surface/5 text-on-surface-variant/20 cursor-not-allowed'
                       : (paymentMode === 'UDHAR' ? 'bg-secondary text-white ambient-glow' : 'bg-primary text-white ambient-glow')
-                  }`}
+                    }`}
                 >
                   {isSearchingCustomer ? (
                     <span className="animate-pulse">Processing...</span>
@@ -1539,7 +1536,7 @@ function NewBillScreen({ setScreen, products, onConfirm }: {
                   )}
                 </button>
                 {paymentMode === 'UDHAR' && customerContact.length !== 10 && (
-                  <motion.p 
+                  <motion.p
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-[10px] text-secondary font-black text-center mt-2 tracking-widest uppercase"
@@ -1595,7 +1592,7 @@ function InventoryScreen({
       </header>
 
       <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-        <button 
+        <button
           onClick={() => setShowLowStockOnly(false)}
           className={`shrink-0 w-36 h-36 p-5 rounded-[2rem] editorial-shadow flex flex-col justify-between transition-all active:scale-95 ${!showLowStockOnly ? 'bg-primary text-white ambient-glow' : 'bg-surface-container-lowest'}`}
         >
@@ -1608,7 +1605,7 @@ function InventoryScreen({
           </div>
         </button>
 
-        <button 
+        <button
           onClick={() => setShowLowStockOnly(true)}
           className={`shrink-0 w-36 h-36 p-5 rounded-[2rem] editorial-shadow flex flex-col justify-between transition-all active:scale-95 border-b-4 ${showLowStockOnly ? 'bg-secondary text-white ambient-glow border-white/20' : 'bg-surface-container-lowest border-secondary/20'}`}
         >
@@ -2296,7 +2293,7 @@ export default function App() {
       const payloadId = newProduct.id.startsWith('prod-') ? undefined : newProduct.id;
       const res = await fetch(`${API_BASE_URL}/api/inventory`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -2365,7 +2362,7 @@ export default function App() {
   const addTransaction = async (newTx: Transaction) => {
     try {
       const token = localStorage.getItem('inventrax_token');
-      
+
       let url = `${API_BASE_URL}/api/bills`;
       let payload: any = {
         customerName: newTx.customerName,
@@ -2408,7 +2405,7 @@ export default function App() {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -2452,19 +2449,27 @@ export default function App() {
   };
 
   const deleteProduct = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
       const token = localStorage.getItem('inventrax_token');
-      await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
         method: 'DELETE',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      localStorage.removeItem(`inventrax_img_${id}`);
-      setProducts(prev => prev.filter(p => p.id !== id));
-      setMenuOpen(null);
+
+      if (res.ok) {
+        localStorage.removeItem(`inventrax_img_${id}`);
+        setProducts(prev => prev.filter(p => p.id !== id));
+        setMenuOpen(null);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to delete product: ${errorData.error || 'Unknown error'}`);
+      }
     } catch (err) {
       console.error(err);
+      alert('A network error occurred while trying to delete the product.');
     }
   };
   const toggleAvailability = async (id: string) => {
@@ -2474,7 +2479,7 @@ export default function App() {
       if (!product) return;
       await fetch(`${API_BASE_URL}/api/inventory`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
