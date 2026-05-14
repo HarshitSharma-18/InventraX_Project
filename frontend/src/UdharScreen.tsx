@@ -67,13 +67,10 @@ export function UdharScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
   }, []);
 
   const handleCustomerSave = (savedCustomer: Customer) => {
-    if (customerToEdit) {
-      setCustomers(customers.map(c => c.id === savedCustomer.id ? { ...c, ...savedCustomer } : c));
-      if (selectedCustomer?.id === savedCustomer.id) {
-        setSelectedCustomer({ ...selectedCustomer, ...savedCustomer } as Customer);
-      }
-    } else {
-      setCustomers([savedCustomer, ...customers]);
+    fetchSummaryAndCustomers();
+    if (selectedCustomer && selectedCustomer.id === savedCustomer.id) {
+       // Merge saved data with existing insights if possible, or just refresh
+       setSelectedCustomer(prev => prev ? { ...prev, ...savedCustomer } : null);
     }
     setCustomerToEdit(null);
   };

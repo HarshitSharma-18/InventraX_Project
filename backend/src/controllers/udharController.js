@@ -62,16 +62,32 @@ exports.createCustomer = async (req, res) => {
     }
 
     // Check for duplicate mobile
-    const { data: existing } = await req.supabase
+    const { data: existing, error: findError } = await req.supabase
       .from('customers')
-      .select('id')
+      .select('*')
       .eq('user_id', userId)
       .eq('mobile_number', mobile_number.trim())
       .is('deleted_at', null)
-      .single();
+      .maybeSingle();
     
     if (existing) {
-      return res.status(400).json({ error: 'Customer with this mobile number already exists' });
+      // If customer exists, we add the opening balance as a new transaction
+      if (obAmt > 0) {
+        const { error: txError } = await req.supabase
+          .from('udhar_transactions')
+          .insert({
+            customer_id: existing.id,
+            user_id: userId,
+            type: 'CREDIT',
+            amount: obAmt,
+            remarks: 'Opening Balance (Added)'
+          });
+        
+        if (txError) {
+          console.error('Failed to add udhar to existing customer:', txError);
+        }
+      }
+      return res.status(200).json(existing);
     }
     
     const { data, error } = await req.supabase
@@ -89,9 +105,6 @@ exports.createCustomer = async (req, res) => {
 
     if (error) throw error;
     
-    // We do not set total_due directly on customer insert because the trigger or the summary query handles it. 
-    // Wait, the summary query calculates total_due from udhar_transactions! So we MUST insert the transaction.
-
     if (obAmt > 0) {
       const { error: txError } = await req.supabase
         .from('udhar_transactions')
@@ -105,7 +118,6 @@ exports.createCustomer = async (req, res) => {
       
       if (txError) {
         console.error('Failed to create opening balance transaction:', txError);
-        // It's safe to return data, the transaction might be missing but the customer is created.
       }
     }
 
@@ -385,7 +397,7 @@ exports.addUdhar = async (req, res) => {
         .eq('user_id', userId)
         .eq('mobile_number', customerPhone.trim())
         .is('deleted_at', null)
-        .single();
+        .maybeSingle();
       
       if (existing) {
         finalCustomerId = existing.id;
@@ -478,26 +490,28 @@ exports.createWithUdhar = async (req, res) => {
       .eq('user_id', userId)
       .eq('mobile_number', mobile_number.trim())
       .is('deleted_at', null)
-      .single();
+      .maybeSingle();
     
+    let customerId;
     if (existing) {
-      return res.status(400).json({ error: 'Customer with this mobile number already exists' });
+      customerId = existing.id;
+    } else {
+      // 2. Create customer
+      const { data: customer, error: custError } = await req.supabase
+        .from('customers')
+        .insert({
+          full_name: full_name.trim(),
+          mobile_number: mobile_number.trim(),
+          address: address?.trim(),
+          notes: notes?.trim(),
+          user_id: userId
+        })
+        .select('id')
+        .single();
+      
+      if (custError) throw custError;
+      customerId = customer.id;
     }
-
-    // 2. Create customer
-    const { data: customer, error: custError } = await req.supabase
-      .from('customers')
-      .insert({
-        full_name: full_name.trim(),
-        mobile_number: mobile_number.trim(),
-        address: address?.trim(),
-        notes: notes?.trim(),
-        user_id: userId
-      })
-      .select('id')
-      .single();
-    
-    if (custError) throw custError;
 
     // 3. Create Bill/Transaction
     const { data: bill, error: billError } = await req.supabase
@@ -532,7 +546,7 @@ exports.createWithUdhar = async (req, res) => {
     const { error: ledgerError } = await req.supabase
       .from('udhar_transactions')
       .insert({
-        customer_id: customer.id,
+        customer_id: customerId,
         user_id: userId,
         type: 'CREDIT',
         amount: amount,
@@ -544,7 +558,7 @@ exports.createWithUdhar = async (req, res) => {
     return res.status(201).json({ 
       success: true, 
       transactionId: bill.id,
-      customerId: customer.id 
+      customerId: customerId 
     });
   } catch (err) {
     console.error('Create with Udhar error:', err);
